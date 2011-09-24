@@ -15,7 +15,7 @@ MathJax.Hub.Config({'tex2jax': {
 }});
 """
 
-class MathJax(Component):
+class MathJaxPlugin(Component):
     """Renders mathematical equations using MathJax library.
     
     Examples:
