@@ -1,19 +1,12 @@
 from trac.wiki.api import IWikiMacroProvider
 from trac.mimeview.api import IHTMLPreviewRenderer
-from trac.web.api import ITemplateStreamFilter
+from trac.web.chrome import add_script, ITemplateProvider
 from trac.core import *
 
 from genshi.builder import tag
 from genshi.core import Markup
-from genshi.filters.transform import Transformer
 
-MATHJAX_CONFIGURATION = """
-MathJax.Hub.Config({'tex2jax': {
-  'inlineMath': [],
-  'displayMath': [],
-  'processEnvironments': false
-}});
-"""
+MATHJAX_URL = 'https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
 
 class MathJaxPlugin(Component):
     """Renders mathematical equations using MathJax library.
@@ -29,7 +22,7 @@ class MathJaxPlugin(Component):
     }}}
     """
 
-    implements(IHTMLPreviewRenderer, IWikiMacroProvider, ITemplateStreamFilter)
+    implements(IHTMLPreviewRenderer, IWikiMacroProvider, ITemplateProvider)
 
     # IWikiMacroProvider methods
 
@@ -40,6 +33,22 @@ class MathJaxPlugin(Component):
         return self.__doc__
 
     def expand_macro(self, formatter, name, content, args=None):
+        add_script(formatter.req, 'mathjax/update.js', 'text/javascript')
+
+        # We access this internals directly because it is not possible to use add_script with full/absolute URL
+        # http://trac.edgewall.org/ticket/10369
+        # We know scripts and scriptset elements are initialized because we called add_script before
+        if MATHJAX_URL not in formatter.req.chrome.get('scriptset'):
+            formatter.req.chrome.get('scripts').append({
+                'href': MATHJAX_URL + '&delayStartupUntil=configured',
+                'type': 'text/javascript',
+            })
+            formatter.req.chrome.get('scriptset').add(MATHJAX_URL)
+
+        # We load configuration afterwards, as we have delay it with delayStartupUntil and we call MathJax.Hub.Configured here
+        # We do this because having text/x-mathjax-config config blocks outside the head does not seem to work
+        add_script(formatter.req, 'mathjax/config.js', 'text/javascript')
+
         if args is None: # Called as macro
             return tag.script(Markup(content), type_="math/tex")
         else: # Called as processor
@@ -52,14 +61,11 @@ class MathJaxPlugin(Component):
             return 2
         return 0
 
-    # ITemplateStreamFilter methods
+    # ITemplateProvider methods
 
-    def filter_stream(self, req, method, filename, stream, data):
-        return stream | Transformer('head').append(
-            tag.script(MATHJAX_CONFIGURATION, type_="text/javascript")
-        ).append(
-            tag.script(
-                type_="text/javascript",
-                src="https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-            )
-        )
+    def get_templates_dirs(self):
+        return []
+
+    def get_htdocs_dirs(self):
+        from pkg_resources import resource_filename
+        return [('mathjax', resource_filename(__name__, 'htdocs'))]
