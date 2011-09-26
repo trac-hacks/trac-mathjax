@@ -40,7 +40,7 @@ class MathJaxPlugin(Component):
         # We know scripts and scriptset elements are initialized because we called add_script before
         if MATHJAX_URL not in formatter.req.chrome.get('scriptset'):
             formatter.req.chrome.get('scripts').append({
-                'href': MATHJAX_URL + '&delayStartupUntil=configured',
+                'href': MATHJAX_URL + '&amp;delayStartupUntil=configured',
                 'type': 'text/javascript',
             })
             formatter.req.chrome.get('scriptset').add(MATHJAX_URL)
