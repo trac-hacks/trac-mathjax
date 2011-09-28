@@ -6,7 +6,7 @@ from trac.core import *
 from genshi.builder import tag
 from genshi.core import Markup
 
-MATHJAX_URL = 'https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'
+MATHJAX_URL = 'https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js'
 
 class MathJaxPlugin(Component):
     """Renders mathematical equations using MathJax library.
@@ -40,7 +40,7 @@ class MathJaxPlugin(Component):
         # We know scripts and scriptset elements are initialized because we called add_script before
         if MATHJAX_URL not in formatter.req.chrome.get('scriptset'):
             formatter.req.chrome.get('scripts').append({
-                'href': MATHJAX_URL + '&amp;delayStartupUntil=configured',
+                'href': MATHJAX_URL + '?delayStartupUntil=configured',
                 'type': 'text/javascript',
             })
             formatter.req.chrome.get('scriptset').add(MATHJAX_URL)
