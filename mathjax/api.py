@@ -6,7 +6,7 @@ from trac.core import *
 from genshi.builder import tag
 from genshi.core import Markup
 
-MATHJAX_URL = 'https://d3eoax9i5htok0.cloudfront.net/mathjax/latest/MathJax.js'
+MATHJAX_URL = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js'
 
 class MathJaxPlugin(Component):
     """Renders mathematical equations using MathJax library.
