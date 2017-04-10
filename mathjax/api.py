@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from trac.wiki.api import IWikiMacroProvider
 from trac.mimeview.api import IHTMLPreviewRenderer
 from trac.web.chrome import add_script, ITemplateProvider
@@ -7,6 +9,7 @@ from genshi.builder import tag
 from genshi.core import Markup
 
 MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js'
+
 
 class MathJaxPlugin(Component):
     """Renders mathematical equations using MathJax library.
@@ -33,26 +36,29 @@ class MathJaxPlugin(Component):
         return self.__doc__
 
     def expand_macro(self, formatter, name, content, args=None):
-        add_script(formatter.req, 'mathjax/update.js', 'text/javascript')
+        req = formatter.req
 
-        # We access this internals directly because it is not possible to use add_script with full/absolute URL
-        # http://trac.edgewall.org/ticket/10369
-        # We know scripts and scriptset elements are initialized because we called add_script before
-        if MATHJAX_URL not in formatter.req.chrome.get('scriptset'):
-            formatter.req.chrome.get('scripts').append({
-                'href': MATHJAX_URL + '?delayStartupUntil=configured',
-                'type': 'text/javascript',
-            })
-            formatter.req.chrome.get('scriptset').add(MATHJAX_URL)
+        if add_script(req, MATHJAX_URL) is not False:
+            # We access this internals directly because it is not possible to
+            # use add_script with full/absolute URL (trac:#10369).
+            req.chrome.get('scripts')[-1]['href'] = \
+                MATHJAX_URL + '?delayStartupUntil=configured'
+            # We load configuration afterwards, as we have delay it with
+            # delayStartupUntil and we call MathJax.Hub.Configured here. We do
+            # this because having text/x-mathjax-config config blocks outside
+            # the head does not seem to work.
+            add_script(req, 'mathjax/config.js', 'text/javascript')
+            add_script(req, 'mathjax/update.js', 'text/javascript')
 
-        # We load configuration afterwards, as we have delay it with delayStartupUntil and we call MathJax.Hub.Configured here
-        # We do this because having text/x-mathjax-config config blocks outside the head does not seem to work
-        add_script(formatter.req, 'mathjax/config.js', 'text/javascript')
-
+        # It is unable to avoid script injection via <script type="math/tex">
+        # with the given text. Instead, we create the same script tag using
+        # javascript on document's ready.
         if args is None: # Called as macro
-            return tag.script(Markup(content), type_="math/tex")
+            element = tag.span
         else: # Called as processor
-            return tag.script(Markup(content), type_="math/tex; mode=display")
+            element = tag.div
+        return Markup(element(content, class_='trac-mathjax',
+                              style='display:none'))
 
     # IHTMLPreviewRenderer methods
 
