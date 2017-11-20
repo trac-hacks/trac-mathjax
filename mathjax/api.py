@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
+#
+# Copyright (C) 2011-2024 Mitar <mitar.trac@tnode.com>
+# All rights reserved.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution.
 
-from trac.wiki.api import IWikiMacroProvider
+from trac.core import Component, implements
 from trac.mimeview.api import IHTMLPreviewRenderer
-from trac.web.chrome import add_script, ITemplateProvider
-from trac.core import *
+from trac.web.chrome import ITemplateProvider, add_script
+from trac.wiki.api import IWikiMacroProvider
 
 from genshi.builder import tag
 from genshi.core import Markup
@@ -53,9 +59,9 @@ class MathJaxPlugin(Component):
         # It is unable to avoid script injection via <script type="math/tex">
         # with the given text. Instead, we create the same script tag using
         # javascript on document's ready.
-        if args is None: # Called as macro
+        if args is None:  # Called as macro
             element = tag.span
-        else: # Called as processor
+        else:  # Called as processor
             element = tag.div
         return Markup(element(content, class_='trac-mathjax',
                               style='display:none'))
