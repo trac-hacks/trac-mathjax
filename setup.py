@@ -14,7 +14,7 @@ VERSION = '0.1.6'
 PACKAGE = 'mathjax'
 
 setup(
-    name='MathJaxPlugin',
+    name='TracMathJax',
     version=VERSION,
     description="Renders mathematical equations using MathJax library.",
     author='Mitar',
@@ -22,6 +22,7 @@ setup(
     url='https://trac-hacks.org/wiki/TracMathJaxPlugin',
     keywords='trac plugin',
     license="AGPLv3",
+    classifiers=['Framework :: Trac'],
     packages=[PACKAGE],
     include_package_data=True,
     package_data={
