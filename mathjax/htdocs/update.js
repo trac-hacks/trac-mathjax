@@ -1,4 +1,4 @@
-jQuery(document).ready(function ($) {
+jQuery(function ($) {
   var render = function () {
     $("#content .trac-mathjax").each(function() {
       var node = $(this);

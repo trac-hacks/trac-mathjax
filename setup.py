@@ -10,7 +10,7 @@
 
 from setuptools import setup
 
-VERSION = '0.1.6'
+VERSION = '0.1.7'
 PACKAGE = 'mathjax'
 
 setup(
@@ -31,6 +31,6 @@ setup(
     install_requires=[],
     zip_safe=False,
     entry_points={
-        'trac.plugins': '%s = %s' % (PACKAGE, PACKAGE),
+        'trac.plugins': '%s = %s.api' % (PACKAGE, PACKAGE),
     },
 )

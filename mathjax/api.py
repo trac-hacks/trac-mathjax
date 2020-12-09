@@ -8,13 +8,11 @@
 
 from trac.core import Component, implements
 from trac.mimeview.api import IHTMLPreviewRenderer
+from trac.util.html import Markup, html as tag
 from trac.web.chrome import ITemplateProvider, add_script
 from trac.wiki.api import IWikiMacroProvider
 
-from genshi.builder import tag
-from genshi.core import Markup
-
-MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js'
+MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js'
 
 
 class MathJaxPlugin(Component):
@@ -31,7 +29,7 @@ class MathJaxPlugin(Component):
     }}}
     """
 
-    implements(IHTMLPreviewRenderer, IWikiMacroProvider, ITemplateProvider)
+    implements(IHTMLPreviewRenderer, ITemplateProvider, IWikiMacroProvider)
 
     # IWikiMacroProvider methods
 
