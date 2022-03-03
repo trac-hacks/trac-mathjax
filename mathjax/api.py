@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 #
 # Copyright (C) 2011-2024 Mitar <mitar.trac@tnode.com>
@@ -6,14 +7,18 @@
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution.
 
-from trac.core import Component, implements
+from trac.core import *
 from trac.mimeview.api import IHTMLPreviewRenderer
 from trac.util.html import Markup, html as tag
 from trac.web.chrome import ITemplateProvider, add_script
 from trac.wiki.api import IWikiMacroProvider
+from trac.wiki import IWikiSyntaxProvider
 
-MATHJAX_URL = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js'
-
+MATHJAX_URL = 'mathjax/MathJax/MathJax.js'
+# Install MathJax 2.7.9 locally:
+# wget https://github.com/mathjax/MathJax/archive/3b461438246adfcf67690795fcc0ae6dc4e335fe.zip
+# unpack into TracMathJax-0.1.7-py2.7.egg/mathjax/htdocs/MathJax
+# restart server
 
 class MathJaxPlugin(Component):
     """Renders mathematical equations using MathJax library.
@@ -28,13 +33,13 @@ class MathJaxPlugin(Component):
         }}}
     }}}
     """
-
-    implements(IHTMLPreviewRenderer, ITemplateProvider, IWikiMacroProvider)
+    implements(IHTMLPreviewRenderer, ITemplateProvider, IWikiMacroProvider, IWikiSyntaxProvider)
 
     # IWikiMacroProvider methods
 
     def get_macros(self):
-        yield 'math'
+        return ('latex', 'Latex', 'LaTeX', 'math')
+        #yield 'math'
 
     def get_macro_description(self, name):
         return self.__doc__
@@ -46,7 +51,7 @@ class MathJaxPlugin(Component):
             # We access this internals directly because it is not possible to
             # use add_script with full/absolute URL (trac:#10369).
             req.chrome.get('scripts')[-1]['href'] = \
-                MATHJAX_URL + '?delayStartupUntil=configured'
+                MATHJAX_URL + '?delayStartupUntil=onload'
             # We load configuration afterwards, as we have delay it with
             # delayStartupUntil and we call MathJax.Hub.Configured here. We do
             # this because having text/x-mathjax-config config blocks outside
@@ -62,7 +67,7 @@ class MathJaxPlugin(Component):
         else:  # Called as processor
             element = tag.div
         return Markup(element(content, class_='trac-mathjax',
-                              style='display:none'))
+                             style='display:none'))
 
     # IHTMLPreviewRenderer methods
 
@@ -79,3 +84,21 @@ class MathJaxPlugin(Component):
     def get_htdocs_dirs(self):
         from pkg_resources import resource_filename
         return [('mathjax', resource_filename(__name__, 'htdocs'))]
+
+    # IWikiSyntaxProvider methos
+
+    def get_link_resolvers(self):
+        return
+
+    def get_wiki_syntax(self):
+        yield (r"(?P<delim>\\\(|\$\$|\\\[)(?P<math>.*?)(\\\)|\$\$|\\\])", self._format_regex_math)
+
+    def _format_regex_math(self, formatter, ns, match):
+        self.env.log.debug('formatter: %s ns: %s' % (formatter, ns))
+        maths = match.group('math')
+        delim = match.group('delim')
+        if delim == "\(":
+            argg = None
+        else:
+            argg = { 'delim': delim }
+        return self.expand_macro(formatter, ns, maths, argg )
